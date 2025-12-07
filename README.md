@@ -97,4 +97,102 @@ The system consists of three main layers:
 Data & Visualization: Node-RED, InfluxDB, Grafana
 Debugging Tools: MQTT Explorer, Wireshark / Bettercap (optional, for security tests)
 
-#
+## Program logic (Python)
+
+This section presents the most important elements of the program responsible for 
+the mathematical simulation of the electric furnace and real-time communication with the PLC via MQTT.  
+The Python script acts as a **digital twin** of the furnace: it receives input data from the PLC, 
+executes one simulation step, and returns the outlet temperature.
+### Receiving frames from the PLC (MQTT → Python)
+
+Python subscribes to the topic `py/in` and receives three `float32` values (big-endian):
+
+- **Tin** – inlet temperature  
+- **Fout** – flow rate [L/min]  
+- **Power** – heater power [%]  
+
+```python
+Tin, Fout, power = struct.unpack('>fff', msg.payload[:12])
+Ph_pct = max(0.0, min(100.0, power))
+
+print(
+    f"[{ts}] IN  Tin={Tin:.3f}°C | "
+    f"Fout={Fout:.3f} L/min | "
+    f"Power={power:.3f} (→ {Ph_pct:.1f}%)"
+)
+```
+### Furnace model core
+
+- The model includes:
+- thermal balance equation,
+- internal states Tstar, v1, v2,
+- nonlinear dependencies of gain and time constant,
+- pure time delay implemented as a FIFO queue.
+```python
+def furnace_step(Tin, F_lmin, Ph_percent):
+    Ph = min(max(Ph_percent, 0.0), 100.0)
+    F = max(F_lmin, 0.0)
+
+    k = k_of_Ph(Ph)
+    tau = tau_of_F(F)
+    q_el = (Ph * PNOM) / 100.0
+
+    dTdt = (F/(60.0*V1))*(Tin - Tstar) + q_el/(CS*RHO*V1)
+    dv1_dt = (Tstar * k - v1) / tau
+    dv2_dt = (v1 - v2) / tau
+
+    # State integration
+    Tstar += TS * dTdt
+    v1    += TS * dv1_dt
+    v2    += TS * dv2_dt
+
+    # Time delay – FIFO queue
+    delay_queue.append(v2)
+    return delay_queue.popleft()
+```
+### Dynamic gain as a function of heater power
+
+The electrical heater exhibits nonlinear efficiency.
+This is modeled using a gain dependent on the power percentage: 
+```python
+def k_of_Ph(Ph_percent):
+    return -0.0002347 * Ph_percent + 1.012
+```
+### Time constant as a function of flow rate
+
+For low flow rates the system reacts more slowly,
+while for higher flow rates the dynamics become faster:
+```python
+def tau_of_F(F_lmin):
+    F = max(F_lmin, 0.0001)
+    tau = 19.08 * (F ** (-0.4293)) - 4.042
+    return max(0.1, tau)
+```
+### Publishing model results (Python → PLC)
+
+The model sends the outlet temperature (Thout) back to the PLC via py/out.
+Additionally, a monitoring frame (Tin, Fout, Power, Thout) is published on py/mon.
+```python
+client.publish(TOPIC_OUT, struct.pack('>f', Thout), qos=0)
+
+client.publish(
+    TOPIC_MON,
+    struct.pack('>ffff', Tin, Fout, power, Thout),
+    qos=0,
+)
+```
+### Main program loop
+
+Python runs in an event-driven mode:
+it waits for messages and processes them immediately when received.
+```python
+client = mqtt.Client(client_id="PIEC")
+client.on_connect = on_connect
+client.on_message = on_message
+
+client.connect(BROKER, PORT, keepalive=60)
+client.loop_start()
+
+print("[READY] IN:py/in  OUT:py/out  MON:py/mon")
+```
+
