@@ -13,7 +13,8 @@ The work includes:
 - Final **experimental validation** on a real furnace installation
 
 <p align="center">
-  <img src="image-url-here" alt="Electric furnace installation" width="400"/>
+  <img width="659" height="587" alt="image" src="https://github.com/user-attachments/assets/b99d7f7e-5e6d-40b0-823e-1aeb78d83e30" />
+
 </p>
 
 ---
@@ -104,9 +105,9 @@ Debugging Tools: MQTT Explorer, Wireshark / Bettercap (optional, for security te
 The foundation of the mathematical model is an equation describing the change in the temperature of water contained in the heating chamber. In the analyzed system, it was assumed that the heating chamber behaves like a perfectly mixed tank. This means that all the water inside the chamber has the same temperature at any given moment. No regions with different temperatures are formed. Therefore, it was assumed that heat transfer occurs uniformly throughout the entire volume of the furnace.
 
 As a result, the following equation was obtained:
-
+<p align="center">
 <img width="392" height="292" alt="Zrzut ekranu 2025-12-12 232544" src="https://github.com/user-attachments/assets/9f99c945-11d7-4bd6-826c-a0b45770fa0d" />
-
+</p>
 The first term of the equation,
 
 describes the effect of the flow rate on the temperature change inside the furnace chamber. The flow rate 𝐹 is expressed in liters per minute, whereas the energy balance equation operates in seconds. Hence the factor 60—this is simply a unit conversion that allows the model to be simulated in real time.
@@ -119,9 +120,9 @@ determines how much the temperature increases due to the heater operation. The h
 
 The actual temperature measured at the furnace outlet does not correspond directly to Thout.
 This effect is described by an additional transfer function:
-
+<p align="center">
   <img width="314" height="46" alt="inercja" src="https://github.com/user-attachments/assets/5b8e7e9f-2c30-4516-908f-386e48ed2fb1" />
-
+</p>
 It represents:
 - the inertia of the installation components,
 - the transport delay resulting from the flow path of the heated medium.
