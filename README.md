@@ -168,8 +168,24 @@ This section presents the most important elements of the program responsible for
 the mathematical simulation of the electric furnace and real-time communication with the PLC via MQTT.  
 The Python script acts as a **digital twin** of the furnace: it receives input data from the PLC, 
 executes one simulation step, and returns the outlet temperature.
-### Receiving frames from the PLC (MQTT → Python)
 
+### Define values
+```python
+TS = 1.0          # [s] krok modelu (PLC wysyła dane co 1 s)
+CS = 4200.0       # [J/(kg·°C)]
+RHO = 1.0         # [kg/L]
+V1 = 1.6          # [L]
+PNOM = 12000      # [W]
+T0_DELAY = 10.0   # [s] stałe opóźnienie t0
+DELAY_LEN = int(round(T0_DELAY / TS))  # długość kolejki opóźnienia
+
+# Stan modelu
+Tstar = 25.0   
+v1 = 25.0      
+v2 = 25.0    
+```
+
+### Receiving frames from the PLC (MQTT → Python)
 Python subscribes to the topic `py/in` and receives three `float32` values (big-endian):
 
 - **Tin** – inlet temperature  
