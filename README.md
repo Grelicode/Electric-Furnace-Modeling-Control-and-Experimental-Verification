@@ -185,23 +185,6 @@ v1 = 25.0
 v2 = 25.0    
 ```
 
-### Receiving frames from the PLC (MQTT → Python)
-Python subscribes to the topic `py/in` and receives three `float32` values (big-endian):
-
-- **Tin** – inlet temperature  
-- **Fout** – flow rate [L/min]  
-- **Power** – heater power [%]  
-
-```python
-Tin, Fout, power = struct.unpack('>fff', msg.payload[:12])
-Ph_pct = max(0.0, min(100.0, power))
-
-print(
-    f"[{ts}] IN  Tin={Tin:.3f}°C | "
-    f"Fout={Fout:.3f} L/min | "
-    f"Power={power:.3f} (→ {Ph_pct:.1f}%)"
-)
-```
 ### library Import 
 
 These imports are necessary because the script must communicate with the PLC and the visualization stack via MQTT, which is handled by the paho.mqtt client. To correctly interpret and generate message payloads in the expected format (often raw bytes), struct is used for reliable binary encoding/decoding. Additionally, time, sys, and deque support stable real-time execution by enabling loop timing, safe program control, and efficient buffering of samples (e.g., for transport delay or signal smoothing).
@@ -268,8 +251,44 @@ def tau_of_F(F_lmin):
     tau = 19.08 * (F ** (-0.4293)) - 4.042
     return max(0.1, tau)
 ```
-### Publishing model results (Python → PLC)
+### MQTT broker and topics configuration
 
+```python
+BROKER, PORT = "192.168.0.110", 1883
+TOPIC_IN   = "py/in"   
+TOPIC_OUT  = "py/out"  
+TOPIC_MON  = "py/mon" 
+
+def on_connect(client, userdata, flags, rc):
+    print(f"[MQTT] connected rc={rc}")
+    client.subscribe(TOPIC_IN, qos=0)
+    print(f"[MQTT] subscribed to {TOPIC_IN}")
+```
+The script defines the MQTT broker address and port (BROKER, PORT) used to establish communication with Mosquitto. It also specifies three topic names: TOPIC_IN (incoming data to the Python model), TOPIC_OUT (outgoing results back to the PLC), and TOPIC_MON (an optional monitoring/debug topic for additional telemetry).
+
+on_connect() - callback
+
+The on_connect(client, userdata, flags, rc) function is an MQTT callback that runs automatically after the client connects to the broker. It prints the connection return code (rc) for quick diagnostics, subscribes to the input topic (TOPIC_IN) so the script can receive process variables from the PLC, and confirms the subscription in the console output.
+
+### Receiving frames from the PLC (MQTT → Python)
+Python subscribes to the topic `py/in` and receives three `float32` values (big-endian):
+
+- **Tin** – inlet temperature  
+- **Fout** – flow rate [L/min]  
+- **Power** – heater power [%]  
+
+```python
+Tin, Fout, power = struct.unpack('>fff', msg.payload[:12])
+Ph_pct = max(0.0, min(100.0, power))
+
+print(
+    f"[{ts}] IN  Tin={Tin:.3f}°C | "
+    f"Fout={Fout:.3f} L/min | "
+    f"Power={power:.3f} (→ {Ph_pct:.1f}%)"
+)
+```
+
+### Publishing model results (Python → PLC)
 The model sends the outlet temperature (Thout) back to the PLC via py/out.
 Additionally, a monitoring frame (Tin, Fout, Power, Thout) is published on py/mon.
 ```python
@@ -281,6 +300,7 @@ client.publish(
     qos=0,
 )
 ```
+
 ### Main program loop
 
 Python runs in an event-driven mode:
