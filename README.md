@@ -315,4 +315,23 @@ client.loop_start()
 
 print("[READY] IN:py/in  OUT:py/out  MON:py/mon")
 ```
+### Main loop and shutdown
+```python
+    try:
+        while True:
+            time.sleep(1.0)
+    except KeyboardInterrupt:
+        print("\n[EXIT] KeyboardInterruppt - closing...")
+        client.loop_stop()
+        client.disconnect()
+        sys.exit(0)
 
+
+if __name__ == "__main__":
+    main()
+```
+
+The script keeps running using an infinite while True loop with time.sleep(1.0) to prevent the program from exiting and to reduce CPU usage while MQTT callbacks handle incoming messages in the background. If the user stops the program with Ctrl+C (KeyboardInterrupt), the exception handler prints a closing message, stops the MQTT network loop (client.loop_stop()), disconnects cleanly from the broker (client.disconnect()), and terminates the application using sys.exit(0).
+
+Entry point
+The if __name__ == "__main__": main() block ensures that main() is executed only when the script is run directly (not when it is imported as a module).
