@@ -332,6 +332,14 @@ if __name__ == "__main__":
 ```
 
 The script keeps running using an infinite while True loop with time.sleep(1.0) to prevent the program from exiting and to reduce CPU usage while MQTT callbacks handle incoming messages in the background. If the user stops the program with Ctrl+C (KeyboardInterrupt), the exception handler prints a closing message, stops the MQTT network loop (client.loop_stop()), disconnects cleanly from the broker (client.disconnect()), and terminates the application using sys.exit(0).
-
 Entry point
 The if __name__ == "__main__": main() block ensures that main() is executed only when the script is run directly (not when it is imported as a module).
+
+### TIA Portal Structure 
+To improve readability, scalability, and maintenance, a clear hierarchical project structure was adopted in TIA Portal.
+### Controller Selection
+The project uses a Siemens SIMATIC S7-1500 CPU 1516-3 PN/DP, identical to the controller installed in the real system.
+This ensures full compatibility between simulation, testing, and real operation.
+<img width="603" height="274" alt="image" src="https://github.com/user-attachments/assets/bc151765-408f-4d5d-a761-3442be1b7477" />
+
+
