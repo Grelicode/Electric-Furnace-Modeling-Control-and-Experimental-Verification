@@ -349,8 +349,27 @@ The PLC program was tested without physical hardware using S7-PLCSIM:
 - Virtual PLC instance with static IPv4 address
 - Network configuration consistent with TIA Portal
 This setup enables seamless communication between TIA Portal and the virtual PLC.
+<p align="center">
 <img width="329" height="353" alt="image" src="https://github.com/user-attachments/assets/58e95db7-5d4a-4057-b363-4a9c44c3a172" />
+</p>
+<p align="center">
 <img width="391" height="334" alt="image" src="https://github.com/user-attachments/assets/f09d845d-5215-427c-83f7-902b2e15d3ed" />
+</p>
+
+### Program Blocks Organization
+
+The PLC program is divided into:
+- Organization Blocks (OB) - main execution and cyclic tasks
+- Function Blocks (FB) - stateful logic (controllers, communication)
+- Functions (FC) - stateless calculations and conversions
+- Data Blocks (DB) - parameter storage and internal states
+All blocks are grouped into dedicated folders.
+
+<p align="center">
+<img width="206" height="276" alt="image" src="https://github.com/user-attachments/assets/49568caf-c8a3-425a-9dcf-8375062bc17e" />
+<p/>
+
+
 
 
 
