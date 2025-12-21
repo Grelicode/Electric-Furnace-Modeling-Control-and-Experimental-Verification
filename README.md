@@ -342,4 +342,15 @@ The project uses a Siemens SIMATIC S7-1500 CPU 1516-3 PN/DP, identical to the co
 This ensures full compatibility between simulation, testing, and real operation.
 <img width="603" height="274" alt="image" src="https://github.com/user-attachments/assets/bc151765-408f-4d5d-a761-3442be1b7477" />
 
+### PLC Simulation
+The PLC program was tested without physical hardware using S7-PLCSIM:
+- TCP/IP communication mode
+- Single network adapter
+- Virtual PLC instance with static IPv4 address
+- Network configuration consistent with TIA Portal
+This setup enables seamless communication between TIA Portal and the virtual PLC.
+<img width="329" height="353" alt="image" src="https://github.com/user-attachments/assets/58e95db7-5d4a-4057-b363-4a9c44c3a172" />
+<img width="391" height="334" alt="image" src="https://github.com/user-attachments/assets/f09d845d-5215-427c-83f7-902b2e15d3ed" />
+
+
 
