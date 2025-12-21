@@ -106,7 +106,7 @@ The foundation of the mathematical model is an equation describing the change in
 
 As a result, the following equation was obtained:
 <p align="center">
-<img width="392" height="292" alt="Zrzut ekranu 2025-12-12 232544" src="https://github.com/user-attachments/assets/9f99c945-11d7-4bd6-826c-a0b45770fa0d" />
+<img width="639" height="388" alt="image" src="https://github.com/user-attachments/assets/dfc9799e-6f55-4837-a536-afa8cc311a8e" />
 </p>
 The first term of the equation,
 
