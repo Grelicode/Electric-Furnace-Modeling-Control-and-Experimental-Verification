@@ -13,11 +13,9 @@ The work includes:
 - Final **experimental validation** on a real furnace installation
 
 <p align="center">
-  <img width="659" height="587" alt="image" src="https://github.com/user-attachments/assets/b99d7f7e-5e6d-40b0-823e-1aeb78d83e30" />
-
+<img width="659" height="587" alt="image" src="https://github.com/user-attachments/assets/b99d7f7e-5e6d-40b0-823e-1aeb78d83e30" />
 </p>
 
----
 
 # Table of Contents
 
