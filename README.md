@@ -22,7 +22,6 @@ The work includes:
 - [Overview](#overview)
 - [System Architecture](#system-architecture)
 - [Project Scope and Key Functionalities](#Project-Scope-and-Key-Functionalities)
-- [Hardware and Software](#hardware-and-software)
 - [Mathematical Model](#Mathematical-model-of-the-furnace)
 - [Program logic in Python](#Program-logic-in-Python) 
 - [TIA Portal Structure](TIA-Portal-Structure)
