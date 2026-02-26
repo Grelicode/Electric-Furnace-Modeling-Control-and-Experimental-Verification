@@ -21,14 +21,14 @@ The work includes:
 
 - [Overview](#overview)
 - [System Architecture](#system-architecture)
-- [Project Scope and Key Functionalities](#Project-Scope-and-Key-Functionalities).
+- [Project Scope and Key Functionalities](#Project-Scope-and-Key-Functionalities)
 - [Hardware and Software](#hardware-and-software)
-- [Mathematical Model](#mathematical-model)
-- [Program logic - Python](#Program-logic-Python).
-- [TIA Portal Structure](TIA-Portal-Structure).
+- [Mathematical Model](#Mathematical-model-of-the-furnace)
+- [Program logic in Python](#Program-logic-in-Python) 
+- [TIA Portal Structure](TIA-Portal-Structure)
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
-- [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python).
-- [Containerized System Architecture](Docker-Based-Monitoring-and-Visualization-Environment).
+- [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python)
+- [Containerized System Architecture](Docker-Based-Monitoring-and-Visualization-Environment)
 - [License](#license)
 - [Contact](#contact)
 
@@ -209,7 +209,7 @@ The time constants describe the thermal inertia of the system as well as delays 
 
 The applied gain and time constants are functions of the flow rate and heater power.
 
-# Program logic - Python
+# Program logic in Python
 
 This section presents the most important elements of the program responsible for 
 the mathematical simulation of the electric furnace and real-time communication with the PLC via MQTT.  
