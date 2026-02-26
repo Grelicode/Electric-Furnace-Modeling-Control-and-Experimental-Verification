@@ -369,6 +369,23 @@ All blocks are grouped into dedicated folders.
 <img width="206" height="276" alt="image" src="https://github.com/user-attachments/assets/49568caf-c8a3-425a-9dcf-8375062bc17e" />
 <p/>
 
+## MQTT Communication in TIA Portal (LMQTT Configuration)
+
+### MQTT Client Configuration in TIA Portal using LMQTT Library
+
+To enable bidirectional communication between the PLC and the Python-based digital twin, the **LMQTT library** was used in TIA Portal.  
+
+The core component responsible for MQTT communication is:
+
+- **Function Block:** `LMQTT_Client` (FB11)  
+- **Instance Data Block:** `MQTT_DB` (DB9)
+<p align="center">
+<img width="412" height="369" alt="image" src="https://github.com/user-attachments/assets/6f07afd1-413f-4ddd-a913-b170cf8d86d0" />
+<p/>
+<p align="center">
+  <img width="267" height="332" alt="image" src="https://github.com/user-attachments/assets/925db8f4-5d6b-4dbd-b606-50532b02f151" />
+<p/>
+The function block is executed cyclically in `OB1`, while all communication parameters, payload buffers, and diagnostic signals are stored in `MQTT_DB`.
 
 
 
