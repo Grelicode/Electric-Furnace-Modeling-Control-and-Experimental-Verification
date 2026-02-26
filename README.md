@@ -27,7 +27,7 @@ The work includes:
 - [Folder Structure](#folder-structure)
 - [Hardware and Software](#hardware-and-software)
 - [Mathematical Model](#mathematical-model)
-- [MQTT Communication](#mqtt-communication)
+- [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Control Algorithm](#control-algorithm)
 - [Installation & Setup](#installation--setup)
 - [Running the Simulation](#running-the-simulation)
