@@ -387,6 +387,97 @@ The core component responsible for MQTT communication is:
 <p/>
 The function block is executed cyclically in `OB1`, while all communication parameters, payload buffers, and diagnostic signals are stored in `MQTT_DB`.
 
+### Connection Parameters (connParameters)
 
+The `connParameters` structure defines the network configuration of the MQTT client.
 
+Configured Parameters:
 
+| Parameter | Value |
+|------------|--------|
+| broker | `"192.168.0.110"` |
+| port | `1883` |
+| keepAlive | `60 s` |
+| tls | Not used (unencrypted connection) |
+
+### Explanation:
+
+- **broker** – IP address of Mosquitto broker running in Docker.
+- **port** – Standard MQTT port (1883, non-TLS).
+- **keepAlive** – Session keepalive interval.
+- **tls** – Structure prepared for secure communication (not enabled in this implementation).
+
+The PLC and broker must operate within the same subnet to allow proper TCP/IP communication (e.g., PLCSIM IP: `192.168.0.10`).
+<p align="center">
+<img width="579" height="139" alt="image" src="https://github.com/user-attachments/assets/40f85ba4-acda-4b99-90e0-ad0ad10e4993" />
+<p/>
+  
+During testing, stable bidirectional communication was confirmed between:
+- SIMATIC S7-1500 (PLCSIM)
+- Mosquitto broker
+- Python digital twin
+
+## Data Conversion and Slicing Method (TIA Portal)
+### REAL-to-Bytes Serialization (Byte Packing)
+
+In Network 4 of the main program (OB1), the function `FC_Convert` (FC2) prepares process data for MQTT publishing.
+<p align="center">
+<img width="600" height="256" alt="image" src="https://github.com/user-attachments/assets/0f31b71d-cf50-4a4b-8d6c-7469d3981d5b" />
+<p/>
+
+The function takes three REAL process values from `DANE_DB`:
+
+- `Tin_C` - inlet temperature  
+- `Fout_Lmin` - flow rate  
+- `Power` - heater power  
+
+and writes them into a 12-byte output array `bytes[0..11]`, which is directly mapped to:
+
+- `MQTT_DB.publishMsgPayload`
+
+This payload is then published to the broker and consumed by the Python digital twin.
+<p align="center">
+<img width="468" height="416" alt="image" src="https://github.com/user-attachments/assets/b1b3f9e2-a2b2-4a8a-b33f-52b7b079052c" />
+<p/>
+
+## Why serialization is needed
+
+MQTT payloads are byte arrays.  
+TIA Portal does not automatically serialize REAL values into a deterministic byte layout, therefore a manual conversion is required.
+
+---
+
+## Conversion strategy (REAL → DWORD → BYTE[4])
+
+Each REAL value is converted using two steps:
+
+### 1) REAL → DWORD (IEEE-754 bit pattern)
+
+```scl
+#dw := REAL_TO_DWORD(#Tin_C);
+#bytes[0] := SHR(IN := #dw, N := 24) AND 16#FF;
+#bytes[1] := SHR(IN := #dw, N := 16) AND 16#FF;
+#bytes[2] := SHR(IN := #dw, N := 8)  AND 16#FF;
+#bytes[3] := #dw AND 16#FF;
+```
+The DWORD is split into four bytes using:
+- SHR (shift right)
+- AND 16#FF (masking to keep only the lowest 8 bits)
+Buffer initialization
+
+Before writing new values, the buffer is cleared:
+```scl
+FOR #i := 0 TO 11 DO
+    #bytes[#i] := 16#00;
+END_FOR;
+```
+Endianness (Big Endian)
+
+The serialization uses Big Endian order:
+
+Most Significant Byte first → Least Significant Byte last
+
+This matches the Python encoding:
+```Python
+struct.pack('>f', value)
+```
