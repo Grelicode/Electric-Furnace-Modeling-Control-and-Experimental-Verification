@@ -28,11 +28,9 @@ The work includes:
 - [Hardware and Software](#hardware-and-software)
 - [Mathematical Model](#mathematical-model)
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
+- [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python).
+- [Containerized System Architecture](Docker-Based-Monitoring-and-Visualization-Environment).
 - [Control Algorithm](#control-algorithm)
-- [Installation & Setup](#installation--setup)
-- [Running the Simulation](#running-the-simulation)
-- [Visualization](#visualization)
-- [Future Work](#future-work)
 - [License](#license)
 - [Contact](#contact)
 
@@ -495,7 +493,9 @@ The purpose of this function is to reconstruct a 32-bit REAL value from the rece
 <p align="center">
 <img width="431" height="262" alt="image" src="https://github.com/user-attachments/assets/44e01e62-2742-4752-af3d-d0800dd205bb" />
 <p/>
-
+<p align="center">
+<img width="446" height="284" alt="image" src="https://github.com/user-attachments/assets/c7bdbb74-720c-455d-9585-d33385045934" />
+<p/>
 
 
 ### Step 1 – Byte Slicing (Reassembling DWORD)
@@ -552,5 +552,184 @@ Byte slicing is required because:
 4. DWORD is converted to REAL.
 5. REAL value is written to DANE_DB.Thout_mqtt.
 
+## Message Validation (Network 6)
+
+In Network 6, a validation mechanism ensures that received MQTT data is processed safely before being used in the control logic. The PLC compares the received topic (`MQTT_DB.receivedTopic`) with the expected topic (`DANE_DB.ExpectedTopic`) and verifies that `MQTT_DB.valid = TRUE` and `MQTT_DB.error = FALSE`. Only when all conditions are met is the value `DANE_DB.Thout_mqtt` transferred to `DANE_DB.Thout_C`, preventing incorrect or corrupted data from affecting the furnace control algorithm.
+<p align="center">
+<img width="541" height="140" alt="image" src="https://github.com/user-attachments/assets/d69618f6-655a-4694-905e-51575ce77733" />
+<p/>
+<p align="center">
+<img width="562" height="209" alt="image" src="https://github.com/user-attachments/assets/26a45b60-3040-47c5-a9b7-d6936adb0ae4" />
+<p/>
+  
+## Cyclic Publishing (Network 7)
+
+In Network 7, cyclic MQTT publishing is implemented using the `LGF_Impulse` block with the instance `LGF_Impulse_DB` (DB10). The block generates a time-based impulse signal that controls the publication of process data. The frequency parameter is set to `1.0`, which produces a 1 Hz impulse. The generated impulse is stored in `DANE_DB.StanImp` and subsequently sets the flag `MQTT_DB.publish`, triggering cyclic data transmission to the MQTT broker. This approach ensures deterministic, time-controlled publishing independent of the OB1 cycle time.
+<p align="center">
+<img width="476" height="268" alt="image" src="https://github.com/user-attachments/assets/71c4ea9f-42a5-47df-bb67-e246332981e8" />
+<p/>
+<p align="center">
+<img width="451" height="254" alt="image" src="https://github.com/user-attachments/assets/e50a9432-41be-4c5d-97f7-4de8b6fb62ce" />
+<p/>
+
+## Communication Verification Between PLC and Python
+
+After implementing data conversion, filtering, and cyclic publishing mechanisms in OB1, the correctness of MQTT communication between the SIMATIC S7-1500 PLC and the Python digital twin was verified.
+The verification was performed simultaneously in two environments:
+
+1. **Python side (simulation layer)** – by monitoring received MQTT frames and observing the calculated furnace outlet temperature (`Thout`) in the terminal.
+2. **TIA Portal side (PLC layer)** – using Watch Tables and monitoring function blocks responsible for data conversion and communication.
+
+---
+
+### Verification on the Python Side
+
+The `on_message()` function handles incoming data from the PLC, performs unpacking of float32 values, executes one simulation step of the furnace model, and publishes the computed outlet temperature back to the PLC.
+
+Successful verification confirmed:
+
+- Correct reception of `Tin`, `Fout`, and `Power` from topic `py/in`
+- Proper calculation of `Thout`
+- Correct publishing of `Thout` to topic `py/out`
+- Stable and error-free communication during runtime
+
+Terminal output confirmed consistent real-time data exchange and correct numerical values.
+<p align="center">
+<img width="464" height="486" alt="image" src="https://github.com/user-attachments/assets/09b12df6-8eb9-4b0e-8baf-41c1001a83c5" />
+<p/>
 
 
+### Verification in TIA Portal
+
+On the PLC side, communication was monitored using Watch Tables.
+
+The following aspects were verified:
+
+- `MQTT_DB.status` indicates active connection
+- Correct received topic (`py/out`)
+- Valid message length (`receivedMsgDataLen = 4`)
+- Proper reconstruction of REAL value (`Thout_mqtt`)
+- Successful transfer to process variable (`Thout_C`)
+
+The Watch Table confirmed correct binary payload reconstruction and consistent numerical values matching the Python output.
+<p align="center">
+<img width="591" height="294" alt="image" src="https://github.com/user-attachments/assets/2fe0a89a-34c4-46a0-a1ac-6dbd952af854" />
+<p/>
+
+
+### Verification Result
+
+The communication between the PLC and the Python digital twin operated correctly in both directions:
+
+- PLC → Python (process variables)
+- Python → PLC (simulated furnace output)
+
+No transmission errors or data corruption were observed.  
+The implemented serialization, byte slicing, validation, and cyclic publishing mechanisms worked as expected.
+
+# Docker-Based Monitoring and Visualization Environment
+
+## Docker Compose Configuration
+<p align="center">
+<img width="578" height="326" alt="image" src="https://github.com/user-attachments/assets/eb48bf99-f895-4860-aa38-7e5521d9dfe1" />
+<p/>
+The entire monitoring and visualization environment is deployed using **Docker Compose**.  
+The `docker-compose.yml` file defines four containers:
+
+- Mosquitto (MQTT broker)
+- Node-RED
+- InfluxDB
+- Grafana
+
+This approach ensures that all services:
+
+- Start automatically
+- Run in isolated environments
+- Communicate within a shared Docker network
+- Persist data using volumes
+
+The whole environment can be started with a single command:
+
+```bash
+docker-compose up -d
+```
+## Node-RED 
+The nodered container provides the integration layer between MQTT and InfluxDB. Node-RED subscribes to the MQTT topic py/mon, decodes the binary payload (4 × float32 BE), converts it into JSON format, and prepares it for database storage. This layer enables flexible data transformation without complex programming.
+<p align="center">
+<img width="580" height="189" alt="image" src="https://github.com/user-attachments/assets/e6b41a73-f67f-40fd-824c-03e0e6c1d873" />
+<p/>
+
+## InfluxDB -  Non-Relational Time-Series Database Setup
+The influxdb container is responsible for time-series data storage.
+<p align="center">
+<img width="485" height="397" alt="image" src="https://github.com/user-attachments/assets/7d30b9c0-fd37-41aa-a7a3-b2a1e5b42423" />
+<p/>
+
+The following elements were created:
+### Organization
+An organization named:
+- `moje_org`
+was defined to logically group database resources.
+### Bucket
+A dedicated bucket:
+- `moj_bucket`
+was created for storing process data.  
+The bucket retention policy was set to:
+### API Token (Access Control)
+To enable secure communication between Node-RED and InfluxDB, a dedicated API token:
+"PIEC" was generated.
+The token provides controlled write access to:
+- organization: `moje_org`
+- bucket: `moj_bucket`
+This mechanism ensures secure and authenticated database access.
+
+## Data Visualization in Grafana
+
+To visualize process data stored in InfluxDB, Grafana was deployed as a separate container within the Docker environment. Grafana serves as the presentation layer of the system, providing a clear and real-time view of process variables and their historical trends.
+
+### Data Source Configuration
+The first step was to add InfluxDB as a data source in Grafana. The connection was configured using:
+- URL: `http://influxdb:8086`
+- Organization: `moje_org`
+- Default bucket: `moj_bucket`
+- API token: `PIEC`
+- Query language: **Flux**
+
+The connection was verified using Grafana’s built-in data source test functionality.
+
+---
+
+### Dashboard Configuration
+
+Based on the stored data, a dedicated dashboard named:
+was created as the main visualization panel of the project.
+
+The dashboard includes:
+
+- Numeric panels displaying current values:
+- `Tin`
+- `Thout`
+- `Fout`
+- `Power`
+- Time-series plots showing variable trends
+- Gauge indicators for quick state assessment
+- A table displaying recent measurement history
+
+---
+
+### Visualization Capabilities
+
+The dashboard enables:
+
+- Real-time monitoring of furnace operation
+- Historical analysis of process variables
+- Visual comparison of temperature, flow, and power
+- Rapid detection of abnormal behavior
+
+Grafana completes the monitoring architecture by transforming stored time-series data into an intuitive and interactive visualization interface.
+<p align="center">
+<img width="580" height="330" alt="image" src="https://github.com/user-attachments/assets/34d05302-b4a0-4333-b04e-151c428666b7" />
+<p/>
+<p align="center">
+<img width="581" height="321" alt="image" src="https://github.com/user-attachments/assets/9dcd9b5b-ec26-46eb-9da2-a46c4b8b8126" />
+<p/>
