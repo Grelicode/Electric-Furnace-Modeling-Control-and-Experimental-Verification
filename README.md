@@ -481,3 +481,76 @@ This matches the Python encoding:
 ```Python
 struct.pack('>f', value)
 ```
+## Byte Slicing and REAL Reconstruction
+
+In Network 5 of OB1, incoming MQTT data from the Python digital twin is converted back into a REAL value.
+
+After verifying that:
+
+- `MQTT_DB.valid = TRUE`
+
+the function `4REAL_1` (FC3) is executed.
+
+The purpose of this function is to reconstruct a 32-bit REAL value from the received MQTT payload.
+<p align="center">
+<img width="431" height="262" alt="image" src="https://github.com/user-attachments/assets/44e01e62-2742-4752-af3d-d0800dd205bb" />
+<p/>
+
+
+
+### Step 1 – Byte Slicing (Reassembling DWORD)
+
+The Python application sends a float32 value encoded in **Big Endian** format:
+
+```python
+struct.pack('>f', value)
+```
+The PLC receives four bytes stored in:
+- MQTT_DB.receivedMsgPayload[0..3]
+Each byte is then assigned to the corresponding byte position of a temporary DWORD variable (tdword).
+
+Example implementation using MOVE instructions:
+- Assign payload bytes to DWORD structure:
+- receivedMsgPayload[0] → tdword.%B3
+- receivedMsgPayload[1] → tdword.%B2
+- receivedMsgPayload[2] → tdword.%B1
+- receivedMsgPayload[3] → tdword.%B0
+<p align="center">
+<img width="421" height="199" alt="image" src="https://github.com/user-attachments/assets/b3d62513-1f9d-4609-81b0-d54231049c91" />
+<p/>
+
+This restores the original 32-bit IEEE-754 binary representation of the REAL number.
+
+The byte order is critical:
+- %B3 = Most Significant Byte
+- %B0 = Least Significant Byte
+
+This matches the Big Endian format used on the Python side.
+
+### Step 2 - DWORD to REAL Conversion
+
+After reconstructing the DWORD, the conversion block is executed:
+<p align="center">
+<img width="398" height="76" alt="image" src="https://github.com/user-attachments/assets/986b6949-156e-4be0-9e41-71cf0ae5b63a" />
+<p/>
+
+The resulting REAL value is written to:
+DANE_DB.Thout_mqtt
+
+### Why Byte Slicing Is Necessary
+
+Byte slicing is required because:
+- MQTT transmits raw byte arrays
+- PLC does not automatically deserialize float values
+- The exact IEEE-754 structure must be reconstructed manually
+- Endianness (Big Endian) must match the sender
+- Without correct slicing and byte assignment, the reconstructed REAL value would be incorrect.
+### Data Flow Summary
+1. Python sends float32 (Big Endian).
+2. PLC receives 4 raw bytes.
+3. Bytes are assigned to DWORD (%B3 → %B0).
+4. DWORD is converted to REAL.
+5. REAL value is written to DANE_DB.Thout_mqtt.
+
+
+
