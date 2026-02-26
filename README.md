@@ -24,6 +24,8 @@ The work includes:
 - [Project Scope and Key Functionalities](#Project-Scope-and-Key-Functionalities).
 - [Hardware and Software](#hardware-and-software)
 - [Mathematical Model](#mathematical-model)
+- [Program logic - Python](#Program-logic-Python).
+- [TIA Portal Structure](TIA-Portal-Structure).
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python).
 - [Containerized System Architecture](Docker-Based-Monitoring-and-Visualization-Environment).
@@ -207,14 +209,14 @@ The time constants describe the thermal inertia of the system as well as delays 
 
 The applied gain and time constants are functions of the flow rate and heater power.
 
-## Program logic (Python)
+# Program logic - Python
 
 This section presents the most important elements of the program responsible for 
 the mathematical simulation of the electric furnace and real-time communication with the PLC via MQTT.  
 The Python script acts as a **digital twin** of the furnace: it receives input data from the PLC, 
 executes one simulation step, and returns the outlet temperature.
 
-### Define values
+## Define values
 ```python
 TS = 1.0          # [s] krok modelu (PLC wysyła dane co 1 s)
 CS = 4200.0       # [J/(kg·°C)]
@@ -230,7 +232,7 @@ v1 = 25.0
 v2 = 25.0    
 ```
 
-### library Import 
+## library Import 
 
 These imports are necessary because the script must communicate with the PLC and the visualization stack via MQTT, which is handled by the paho.mqtt client. To correctly interpret and generate message payloads in the expected format (often raw bytes), struct is used for reliable binary encoding/decoding. Additionally, time, sys, and deque support stable real-time execution by enabling loop timing, safe program control, and efficient buffering of samples (e.g., for transport delay or signal smoothing).
 
@@ -249,7 +251,7 @@ import sys - gives access to system-level features like program arguments and cl
 from collections import deque - provides an efficient double-ended queue used as a buffer for streaming data (e.g., for delays).
 
 
-### Furnace model core
+## Furnace model core
 
 - The model includes:
 - thermal balance equation,
@@ -278,7 +280,7 @@ def furnace_step(Tin, F_lmin, Ph_percent):
     delay_queue.append(v2)
     return delay_queue.popleft()
 ```
-### Dynamic gain as a function of heater power
+## Dynamic gain as a function of heater power
 
 The electrical heater exhibits nonlinear efficiency.
 This is modeled using a gain dependent on the power percentage: 
@@ -286,7 +288,7 @@ This is modeled using a gain dependent on the power percentage:
 def k_of_Ph(Ph_percent):
     return -0.0002347 * Ph_percent + 1.012
 ```
-### Time constant as a function of flow rate
+## Time constant as a function of flow rate
 
 For low flow rates the system reacts more slowly,
 while for higher flow rates the dynamics become faster:
@@ -296,7 +298,7 @@ def tau_of_F(F_lmin):
     tau = 19.08 * (F ** (-0.4293)) - 4.042
     return max(0.1, tau)
 ```
-### MQTT broker and topics configuration
+## MQTT broker and topics configuration
 
 ```python
 BROKER, PORT = "192.168.0.110", 1883
@@ -315,7 +317,7 @@ on_connect() - callback
 
 The on_connect(client, userdata, flags, rc) function is an MQTT callback that runs automatically after the client connects to the broker. It prints the connection return code (rc) for quick diagnostics, subscribes to the input topic (TOPIC_IN) so the script can receive process variables from the PLC, and confirms the subscription in the console output.
 
-### Receiving frames from the PLC (MQTT → Python)
+## Receiving frames from the PLC (MQTT → Python)
 Python subscribes to the topic `py/in` and receives three `float32` values (big-endian):
 
 - **Tin** – inlet temperature  
@@ -333,7 +335,7 @@ print(
 )
 ```
 
-### Publishing model results (Python → PLC)
+## Publishing model results (Python → PLC)
 The model sends the outlet temperature (Thout) back to the PLC via py/out.
 Additionally, a monitoring frame (Tin, Fout, Power, Thout) is published on py/mon.
 ```python
@@ -346,7 +348,7 @@ client.publish(
 )
 ```
 
-### Main program loop
+## Main program loop
 
 Python runs in an event-driven mode:
 it waits for messages and processes them immediately when received.
@@ -360,7 +362,7 @@ client.loop_start()
 
 print("[READY] IN:py/in  OUT:py/out  MON:py/mon")
 ```
-### Main loop and shutdown
+## Main loop and shutdown
 ```python
     try:
         while True:
@@ -380,14 +382,14 @@ The script keeps running using an infinite while True loop with time.sleep(1.0) 
 Entry point
 The if __name__ == "__main__": main() block ensures that main() is executed only when the script is run directly (not when it is imported as a module).
 
-### TIA Portal Structure 
+# TIA Portal Structure 
 To improve readability, scalability, and maintenance, a clear hierarchical project structure was adopted in TIA Portal.
 ### Controller Selection
 The project uses a Siemens SIMATIC S7-1500 CPU 1516-3 PN/DP, identical to the controller installed in the real system.
 This ensures full compatibility between simulation, testing, and real operation.
 <img width="603" height="274" alt="image" src="https://github.com/user-attachments/assets/bc151765-408f-4d5d-a761-3442be1b7477" />
 
-### PLC Simulation
+## PLC Simulation
 The PLC program was tested without physical hardware using S7-PLCSIM:
 - TCP/IP communication mode
 - Single network adapter
@@ -401,7 +403,7 @@ This setup enables seamless communication between TIA Portal and the virtual PLC
 <img width="391" height="334" alt="image" src="https://github.com/user-attachments/assets/f09d845d-5215-427c-83f7-902b2e15d3ed" />
 </p>
 
-### Program Blocks Organization
+## Program Blocks Organization
 
 The PLC program is divided into:
 - Organization Blocks (OB) - main execution and cyclic tasks
