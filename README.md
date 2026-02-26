@@ -1,6 +1,6 @@
 # Electric Furnace Modeling, Control and Experimental Verification
 
-## Overview
+# Overview
 This project focuses on creating a complete workflow for modeling, simulating, and experimentally verifying the control of an electric furnace used as part of the heat distribution and exchange installation at the Department of Automation and Robotics.  
 The work includes:
 
@@ -19,24 +19,22 @@ The work includes:
 
 ---
 
-## Table of Contents
+# Table of Contents
 
 - [Overview](#overview)
 - [System Architecture](#system-architecture)
-- [Features](#features)
-- [Folder Structure](#folder-structure)
+- [Project Scope and Key Functionalities](#Project-Scope-and-Key-Functionalities).
 - [Hardware and Software](#hardware-and-software)
 - [Mathematical Model](#mathematical-model)
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python).
 - [Containerized System Architecture](Docker-Based-Monitoring-and-Visualization-Environment).
-- [Control Algorithm](#control-algorithm)
 - [License](#license)
 - [Contact](#contact)
 
 ---
 
-## System Architecture
+# System Architecture
 
 The system consists of three main layers:
 
@@ -54,51 +52,102 @@ The system consists of three main layers:
 3. **Visualization & Data Layer**  
    - Node-RED dashboard for user interface  
    - InfluxDB as a time-series database  
-   - Grafana panels for real-time and historical data visualization  
+   - Grafana panels for real-time and historical data visualization
+<p align="center">
+<img width="2165" height="1407" alt="image" src="https://github.com/user-attachments/assets/1c73c9c5-f22b-420f-a0a6-f2e077c993e1" />
+</p>
+---
+
+# Project Scope and Key Functionalities
+
+## 🔥 1. Mathematical Model of the Electric Furnace
+
+- Lumped-parameter thermal model based on the energy balance equation  
+- Two first-order inertial elements and transport delay (dead time)  
+- Nonlinear gain dependent on heater power  
+- Time constants dependent on flow rate  
+- Implemented as a Python-based digital twin  
+- Real-time simulation synchronized with PLC cycle (1 s sampling)
 
 ---
 
-## Features
+## 🤖 2. PLC Control and Data Processing (TIA Portal)
 
-### 🔥 1. Mathematical Model of the Furnace
-- Lumped-parameter thermal model  
-- First-order plus dead-time (FOPDT) approximation (configurable)  
-- Adjustable parameters (thermal capacity, heat transfer coefficient, heater power)  
-- Simple enough to be implemented both in Python and PLC (SCL)
-
-### 🤖 2. PLC Control System
-- PI controller with anti-windup  
-- Gain scheduling based on temperature ranges  
-- Safety logic: overtemperature protection, emergency stop, communication timeout  
-- Implementation in TIA Portal (SCL / LAD)
-
-### 📡 3. Python–PLC Communication
-- MQTT publish/subscribe    
-- Option to enable TLS encryption (Mosquitto + OpenSSL certificates)  
-- Clear separation between simulation mode and real-plant mode
-
-### 📊 4. Visualization Platform
-- Node-RED dashboard for operator interface  
-- InfluxDB for process data logging  
-- Grafana dashboards for advanced plotting, comparison of model vs. real process  
-- Export of data for further analysis
-
-### 🧪 5. Experimental Validation
-- Closed-loop tests with real furnace after successful simulations  
-- Comparison of setpoint tracking and disturbance rejection  
-- Evaluation of the gain-scheduled PI controller performance  
-- Possibility to tune controller directly from simulation results
+- Implementation on Siemens SIMATIC S7-1500  
+- PI controller prepared for gain scheduling  
+- Cyclic execution in OB1  
+- Manual REAL-to-BYTE serialization (REAL → DWORD → BYTE)  
+- Byte slicing method for float reconstruction (BYTE → DWORD → REAL)  
+- Topic validation and communication error handling  
+- Time-controlled cyclic publishing using LGF_Impulse block  
 
 ---
 
-## Folder Structure
+## 📡 3. MQTT-Based PLC–Python Communication
 
-Data & Visualization: Node-RED, InfluxDB, Grafana
-Debugging Tools: MQTT Explorer, Wireshark / Bettercap (optional, for security tests)
+- Bidirectional communication via Mosquitto broker  
+- Float32 (Big Endian) deterministic data transmission  
+- Publishing of process variables (Tin, Fout, Power)  
+- Receiving simulated outlet temperature (Thout)  
+- Validation using status flags (`valid`, `error`)  
+- Tested in simulation (PLCSIM) and integrated architecture  
 
-## Mathematical model of the furnace
+---
 
-### Energy balance equation 
+## 🐳 4. Containerized Monitoring Environment (Docker)
+
+- Complete system deployed using Docker Compose  
+- Independent containers for:
+  - Mosquitto (MQTT broker)
+  - Node-RED (data processing layer)
+  - InfluxDB (time-series database)
+  - Grafana (visualization platform)
+- Persistent volumes for configuration and historical data  
+- One-command startup of the entire environment  
+
+---
+
+## 🗄 5. Non-Relational Time-Series Database (InfluxDB)
+
+- Organization: `moje_org`  
+- Dedicated bucket: `moj_bucket`  
+- Retention policy: Forever  
+- Measurement: `piec`  
+- Timestamped storage of process variables:
+  - Tin
+  - Thout
+  - Fout
+  - Power  
+- API token-based authentication for secure access  
+
+---
+
+## 📊 6. Data Visualization in Grafana
+
+- Dedicated dashboard: **PIEC – SYMULACJA**  
+- Real-time numeric indicators  
+- Time-series plots for dynamic analysis  
+- Gauge panels for quick state assessment  
+- Historical data tables  
+- Visualization of both simulation and process behavior  
+
+---
+
+## 🧪 7. Virtual Commissioning and Communication Verification
+
+- Full bidirectional testing between PLC and Python model  
+- Verification via:
+  - Python terminal monitoring  
+  - TIA Portal Watch Tables  
+- Validation of correct byte-level data transmission  
+- Confirmation of stable, error-free MQTT communication  
+- Demonstration of digital twin integration with industrial PLC
+
+---
+
+# Mathematical model of the furnace
+
+## Energy balance equation 
 
 The foundation of the mathematical model is an equation describing the change in the temperature of water contained in the heating chamber. In the analyzed system, it was assumed that the heating chamber behaves like a perfectly mixed tank. This means that all the water inside the chamber has the same temperature at any given moment. No regions with different temperatures are formed. Therefore, it was assumed that heat transfer occurs uniformly throughout the entire volume of the furnace.
 
@@ -367,7 +416,7 @@ All blocks are grouped into dedicated folders.
 <img width="206" height="276" alt="image" src="https://github.com/user-attachments/assets/49568caf-c8a3-425a-9dcf-8375062bc17e" />
 <p/>
 
-## MQTT Communication in TIA Portal 
+# MQTT Communication in TIA Portal 
 
 ### MQTT Client Configuration in TIA Portal using LMQTT Library
 
@@ -572,7 +621,7 @@ In Network 7, cyclic MQTT publishing is implemented using the `LGF_Impulse` bloc
 <img width="451" height="254" alt="image" src="https://github.com/user-attachments/assets/e50a9432-41be-4c5d-97f7-4de8b6fb62ce" />
 <p/>
 
-## Communication Verification Between PLC and Python
+# Communication Verification Between PLC and Python
 
 After implementing data conversion, filtering, and cyclic publishing mechanisms in OB1, the correctness of MQTT communication between the SIMATIC S7-1500 PLC and the Python digital twin was verified.
 The verification was performed simultaneously in two environments:
@@ -582,7 +631,7 @@ The verification was performed simultaneously in two environments:
 
 ---
 
-### Verification on the Python Side
+## Verification on the Python Side
 
 The `on_message()` function handles incoming data from the PLC, performs unpacking of float32 values, executes one simulation step of the furnace model, and publishes the computed outlet temperature back to the PLC.
 
@@ -599,7 +648,7 @@ Terminal output confirmed consistent real-time data exchange and correct numeric
 <p/>
 
 
-### Verification in TIA Portal
+## Verification in TIA Portal
 
 On the PLC side, communication was monitored using Watch Tables.
 
@@ -617,7 +666,7 @@ The Watch Table confirmed correct binary payload reconstruction and consistent n
 <p/>
 
 
-### Verification Result
+## Verification Result
 
 The communication between the PLC and the Python digital twin operated correctly in both directions:
 
