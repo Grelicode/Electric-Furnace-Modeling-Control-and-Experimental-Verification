@@ -369,7 +369,7 @@ All blocks are grouped into dedicated folders.
 <img width="206" height="276" alt="image" src="https://github.com/user-attachments/assets/49568caf-c8a3-425a-9dcf-8375062bc17e" />
 <p/>
 
-## MQTT Communication in TIA Portal (LMQTT Configuration)
+## MQTT Communication in TIA Portal 
 
 ### MQTT Client Configuration in TIA Portal using LMQTT Library
 
