@@ -54,7 +54,7 @@ The system consists of three main layers:
 <p align="center">
 <img width="2165" height="1407" alt="image" src="https://github.com/user-attachments/assets/1c73c9c5-f22b-420f-a0a6-f2e077c993e1" />
 </p>
----
+
 
 # Project Scope and Key Functionalities
 
