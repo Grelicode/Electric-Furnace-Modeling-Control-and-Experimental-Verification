@@ -28,7 +28,7 @@ The work includes:
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python)
 - [Containerized System Architecture](#Docker-Based-Monitoring-and-Visualization-Environment)
-- [PI Controller and Implementation].(#PI-Controller-and-Implementation).
+- [PI Controller and Implementation](#PI-Controller-and-Implementation).
 
 ---
 
