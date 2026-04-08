@@ -28,7 +28,7 @@ The work includes:
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python)
 - [Containerized System Architecture](#Docker-Based-Monitoring-and-Visualization-Environment)
-
+- [PI Controller and Implementation].(#PI-Controller-and-Implementation).
 
 ---
 
@@ -780,3 +780,19 @@ Grafana completes the monitoring architecture by transforming stored time-series
 <p align="center">
 <img width="581" height="321" alt="image" src="https://github.com/user-attachments/assets/9dcd9b5b-ec26-46eb-9da2-a46c4b8b8126" />
 <p/>
+
+# PI Controller and Implementation
+To control the furnace outlet temperature, a Proportional–Integral (PI) controller was implemented in the PLC (Siemens S7-1500).
+The controller operates in real time and adjusts the heater power to maintain the desired temperature despite disturbances and varying process conditions.
+## PLC Implementation (TIA Portal)
+The controller is implemented as a Function Block (FB3_PI) with an instance data block.
+<p align="center">
+<img width="489" height="330" alt="image" src="https://github.com/user-attachments/assets/e845961d-8de8-4823-8d3f-462f9d496f88" />
+<p/>
+## Control Algorithm (SCL)
+The controller is implemented in discrete form with a sampling time equal to the PLC cycle.
+<p align="center">
+<img width="578" height="442" alt="image" src="https://github.com/user-attachments/assets/8753de42-377b-45d8-84e7-3773d17f3089" />
+<p/>
+
+
