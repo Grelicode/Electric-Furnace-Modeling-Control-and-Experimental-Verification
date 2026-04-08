@@ -24,12 +24,11 @@ The work includes:
 - [Project Scope and Key Functionalities](#Project-Scope-and-Key-Functionalities)
 - [Mathematical Model](#Mathematical-model-of-the-furnace)
 - [Program logic in Python](#Program-logic-in-Python) 
-- [TIA Portal Structure](TIA-Portal-Structure)
+- [TIA Portal Structure](#TIA-Portal-Structure)
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python)
-- [Containerized System Architecture](Docker-Based-Monitoring-and-Visualization-Environment)
-- [License](#license)
-- [Contact](#contact)
+- [Containerized System Architecture](#Docker-Based-Monitoring-and-Visualization-Environment)
+
 
 ---
 
