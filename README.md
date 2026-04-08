@@ -856,6 +856,7 @@ The heater was controlled using a PWM signal generated in a dedicated function b
 <p align="center">
 <img width="492" height="284" alt="image" src="https://github.com/user-attachments/assets/5447264e-885b-46ad-abc3-1ee5fdea8674" />
 <p/>
+   
 The real system response confirmed:
 - correct operation of the control algorithm
 - stable temperature regulation
