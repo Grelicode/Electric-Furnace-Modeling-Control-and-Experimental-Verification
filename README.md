@@ -28,8 +28,9 @@ The work includes:
 - [MQTT Communication](#MQTT-Communication-in-TIA-Portal)
 - [Communication Verification Between PLC and Python](#Communication-Verification-Between-PLC-and-Python)
 - [Containerized System Architecture](#Docker-Based-Monitoring-and-Visualization-Environment)
-- [PI Controller and Implementation](#PI-Controller-and-Implementation).
-
+- [PI Controller and Implementation](#PI-Controller-and-Implementation)
+- [FOPDT Identification and Gain Scheduling](#FOPDT-Identification-and-Gain-Scheduling)
+- [Experimental Verification on Real System](#Experimental-Verification-on-Real-System)
 ---
 
 # System Architecture
@@ -789,10 +790,79 @@ The controller is implemented as a Function Block (FB3_PI) with an instance data
 <p align="center">
 <img width="489" height="330" alt="image" src="https://github.com/user-attachments/assets/e845961d-8de8-4823-8d3f-462f9d496f88" />
 <p/>
+   
 ## Control Algorithm (SCL)
 The controller is implemented in discrete form with a sampling time equal to the PLC cycle.
 <p align="center">
 <img width="578" height="442" alt="image" src="https://github.com/user-attachments/assets/8753de42-377b-45d8-84e7-3773d17f3089" />
 <p/>
 
+# FOPDT Identification and Gain Scheduling
+The furnace dynamics were identified experimentally using step response tests. Based on the measured data, key process parameters were calculated using the two-point method, allowing approximation of the system with an FOPDT model. Controller parameters were then determined for multiple operating points and approximated using linear functions (developed in Excel). These relationships were implemented in the PLC using SCL. Finally, a gain scheduling mechanism was introduced, enabling real-time adaptation of PI controller parameters to changing flow conditions, resulting in improved stability and control performance.
+## Comparison of system response with and without gain scheduling
+The comparison shows that the use of gain scheduling significantly improves control performance under varying operating conditions. With gain scheduling enabled, the controller dynamically adapts its parameters to the current flow rate, resulting in a more stable response, reduced overshoot, and faster settling time.
+<p align="center">
+<img width="390" height="276" alt="image" src="https://github.com/user-attachments/assets/c2ac4797-244b-4a94-af6b-14e4148e6615" />
+<p/>
+In contrast, the system without gain scheduling uses fixed controller parameters, which leads to degraded performance when process dynamics change. This results in higher overshoot, slower response, and less consistent behavior across different operating points. Overall, gain scheduling provides better robustness and ensures more uniform control quality over the entire operating range.
 
+# Experimental Verification on Real System
+After successful virtual commissioning, the control system was deployed and tested on a real electric furnace installation.
+The goal was to verify:
+- correctness of the control algorithm
+- performance of the PI controller
+- effectiveness of the gain scheduling mechanism
+- 
+## PLC Program Structure
+The control program was implemented in TIA Portal (Siemens S7-1500) and organized into logical networks:
+Measurement scaling – conversion of analog inputs (flow, temperatures) to engineering units
+Control logic (PWM conditions) – heater activation based on flow and temperature limits
+Gain scheduling block – real-time calculation of 𝐾𝑝 and 𝑇𝑖 based on flow
+PI controller (custom FB) – temperature control
+PWM generation – conversion of control signal to binary heater output
+<p align="center">
+<img width="476" height="175" alt="image" src="https://github.com/user-attachments/assets/2b12f910-2dd0-4cc2-98d5-657a5eda4fa9" />
+<p/>
+<p align="center">
+<img width="419" height="306" alt="image" src="https://github.com/user-attachments/assets/541be65d-7e1c-4786-92be-449fd364966d" />
+<p/>
+<p align="center">
+<img width="356" height="289" alt="image" src="https://github.com/user-attachments/assets/53f5c315-0fd0-4db9-a2f6-7a5d76de492a" />
+<p/>
+<p align="center">
+<img width="288" height="230" alt="image" src="https://github.com/user-attachments/assets/f0508787-b6bc-4be1-9c49-f10a8433bc65" />
+<p/>
+
+
+
+
+## PWM Control
+The heater was controlled using a PWM signal generated in a dedicated function block:
+- Based on controller output (duty cycle)
+- Implemented using TON timers
+- Enabled precise power control using digital output
+<p align="center">
+<img width="265" height="160" alt="image" src="https://github.com/user-attachments/assets/d07e4b04-ae52-4649-8437-b467cfdefc84" />
+<p/>
+<p align="center">
+<img width="445" height="222" alt="image" src="https://github.com/user-attachments/assets/7054786c-3a76-43e9-93bb-f34653fddfb8" />
+<p/> 
+<p align="center">
+<img width="418" height="235" alt="image" src="https://github.com/user-attachments/assets/23ed678f-e16a-4b08-b3bb-0a26a31f7d3d" />
+<p/>
+
+## Experimental Results
+
+<p align="center">
+<img width="492" height="284" alt="image" src="https://github.com/user-attachments/assets/5447264e-885b-46ad-abc3-1ee5fdea8674" />
+<p/>
+The real system response confirmed:
+- correct operation of the control algorithm
+- stable temperature regulation
+- proper tracking of setpoint changes
+- safe transition from simulation to real system
+
+With gain scheduling enabled, the system showed:
+- smoother response
+- reduced overshoot
+- better performance under changing flow conditions
